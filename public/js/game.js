@@ -1,13 +1,13 @@
 const config = {
   type: Phaser.AUTO,
   parent: "phaser-example",
-  width: 800,
-  height: 600,
+  width: 640,
+  height: 640,
   physics: {
     default: "arcade",
     arcade: {
       debug: false,
-      gravity: { y: 0 },
+      gravity: { y: 0, x: 0 },
     },
   },
   scene: {
@@ -20,12 +20,34 @@ const config = {
 const game = new Phaser.Game(config);
 
 function preload() {
-  this.load.image("ship", "assets/spaceShips_001.png");
+  this.load.image("outdoor", "assets/Serene_Village_16x16.png");
+  this.load.tilemapTiledJSON("level1", "assets/maps/MAP-ONE.json");
+  this.load.image("lizz", "assets/spaceShips_001.png");
   this.load.image("otherPlayer", "assets/enemyBlack5.png");
   this.load.image("star", "assets/star_gold.png");
+  this.load.spritesheet("lizz_run", "assets/characters/lizz_run.png", {
+    frameWidth: 16,
+    frameHeight: 32,
+  });
+  this.load.spritesheet("lizz_idle", "assets/characters/lizz_idle.png", {
+    frameWidth: 16,
+    frameHeight: 32,
+  });
 }
 
 function create() {
+
+  const onemap = this.make.tilemap({ key: "level1" });
+  const onetileset = onemap.addTilesetImage("outdoor", "outdoor");
+  const onelayer = onemap.createStaticLayer(
+    "Tile Layer 1",
+    onetileset,
+    0,
+    0
+  );
+
+  cursors = this.input.keyboard.createCursorKeys();
+
   const self = this;
   this.socket = io();
   this.otherPlayers = this.physics.add.group();
@@ -52,7 +74,6 @@ function create() {
     });
   });
 
-  this.cursors = this.input.keyboard.createCursorKeys();
 
   this.socket.on("playerMoved", function (playerInfo) {
     self.otherPlayers.getChildren().forEach(function (otherPlayer) {
@@ -63,25 +84,11 @@ function create() {
     });
   });
 
-  this.blueScoreText = this.add.text(16, 16, "", {
-    fontSize: "32px",
-    fill: "#0000FF",
-  });
-  this.redScoreText = this.add.text(584, 16, "", {
-    fontSize: "32px",
-    fill: "#FF0000",
-  });
-
-  this.socket.on("scoreUpdate", function (scores) {
-    self.blueScoreText.setText("Blue: " + scores.blue);
-    self.redScoreText.setText("Red: " + scores.red);
-  });
-
   this.socket.on("starLocation", function (starLocation) {
     if (self.star) self.star.destroy();
     self.star = self.physics.add.image(starLocation.x, starLocation.y, "star");
     self.physics.add.overlap(
-      self.ship,
+      self.person,
       self.star,
       function () {
         this.socket.emit("starCollected");
@@ -90,81 +97,109 @@ function create() {
       self
     );
   });
+
+  this.anims.create({
+    key: "left",
+    frames: this.anims.generateFrameNumbers("lizz_run", { start: 12, end: 17 }),
+    frameRate: 10,
+    repeat: -1,
+  });
+
+  this.anims.create({
+    key: "right",
+    frames: this.anims.generateFrameNumbers("lizz_run", { start: 0, end: 5 }),
+    frameRate: 10,
+    repeat: -1,
+  });
+
+  this.anims.create({
+    key: "up",
+    frames: this.anims.generateFrameNumbers("lizz_run", { start: 6, end: 11 }),
+    frameRate: 10,
+    repeat: -1,
+  });
+
+  this.anims.create({
+    key: "down",
+    frames: this.anims.generateFrameNumbers("lizz_run", { start: 18, end: 23 }),
+    frameRate: 10,
+    repeat: -1,
+  });
+
+  this.anims.create({
+    key: "idle",
+    frames: this.anims.generateFrameNumbers("lizz_idle", { start: 0, end: 5 }),
+    frameRate: 10,
+    repeat: -1,
+  });
+
+  this.cursors = this.input.keyboard.createCursorKeys();
+
+  // this.physics.add.collider(this.person, onelayer);
 }
 
 function update() {
-  if (this.ship) {
-    if (this.cursors.left.isDown) {
-      this.ship.setAngularVelocity(-150);
-    } else if (this.cursors.right.isDown) {
-      this.ship.setAngularVelocity(150);
+  if (this.person) {
+    if (cursors.left.isDown) {
+      this.person.setVelocityX(-160);
+      this.person.setVelocityY(0);
+      this.person.anims.play("left", true);
+    } else if (cursors.right.isDown) {
+      this.person.setVelocityX(160);
+      this.person.setVelocityY(0);
+      this.person.anims.play("right", true);
+    } else if (cursors.up.isDown) {
+      this.person.setVelocityY(-160);
+      this.person.setVelocityX(0);
+      this.person.anims.play("up", true);
+    } else if (cursors.down.isDown) {
+      this.person.setVelocityY(160);
+      this.person.setVelocityX(0);
+      this.person.anims.play("down", true);
     } else {
-      this.ship.setAngularVelocity(0);
+      this.person.setVelocityX(0);
+      this.person.setVelocityY(0);
+      this.person.anims.play("idle", true);
     }
 
-    if (this.cursors.up.isDown) {
-      this.physics.velocityFromRotation(
-        this.ship.rotation + 1.5,
-        100,
-        this.ship.body.acceleration
-      );
-    } else {
-      this.ship.setAcceleration(0);
-    }
 
     // emit player movement
-    const x = this.ship.x;
-    const y = this.ship.y;
-    const r = this.ship.rotation;
+    const x = this.person.x;
+    const y = this.person.y;
+
     if (
-      this.ship.oldPosition &&
-      (x !== this.ship.oldPosition.x ||
-        y !== this.ship.oldPosition.y ||
-        r !== this.ship.oldPosition.rotation)
+      this.person.oldPosition &&
+      (x !== this.person.oldPosition.x ||
+        y !== this.person.oldPosition.y )
     ) {
       this.socket.emit("playerMovement", {
-        x: this.ship.x,
-        y: this.ship.y,
-        rotation: this.ship.rotation,
+        x: this.person.x,
+        y: this.person.y,
       });
     }
 
     // save old position data
-    this.ship.oldPosition = {
-      x: this.ship.x,
-      y: this.ship.y,
-      rotation: this.ship.rotation,
+    this.person.oldPosition = {
+      x: this.person.x,
+      y: this.person.y,
     };
 
-    // this.physics.world.wrap(this.ship, 5);
+    // this.physics.world.wrap(this.person, 5);
   }
 }
 
 function addPlayer(self, playerInfo) {
-  self.ship = self.physics.add
-    .image(playerInfo.x, playerInfo.y, "ship")
+  self.person = self.physics.add
+    .sprite(playerInfo.x, playerInfo.y, "lizz_run")
     .setOrigin(0.5, 0.5)
-    .setDisplaySize(53, 40);
-  if (playerInfo.team === "blue") {
-    self.ship.setTint(0x0000ff);
-  } else {
-    self.ship.setTint(0xff0000);
-  }
-  self.ship.setDrag(100);
-  self.ship.setAngularDrag(100);
-  self.ship.setMaxVelocity(200);
+    .setDisplaySize(16, 32);
 }
 
 function addOtherPlayers(self, playerInfo) {
   const otherPlayer = self.add
     .sprite(playerInfo.x, playerInfo.y, "otherPlayer")
     .setOrigin(0.5, 0.5)
-    .setDisplaySize(53, 40);
-  if (playerInfo.team === "blue") {
-    otherPlayer.setTint(0x0000ff);
-  } else {
-    otherPlayer.setTint(0xff0000);
-  }
+    .setDisplaySize(16, 32);
   otherPlayer.playerId = playerInfo.playerId;
   self.otherPlayers.add(otherPlayer);
 }

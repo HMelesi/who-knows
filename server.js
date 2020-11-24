@@ -75,5 +75,5 @@ io.on("connection", function (socket) {
   });
 });
 
-server.listen(process.env.PORT || 3000, 
+server.listen(process.env.PORT || 3002, 
 	() => console.log("Server is running..."));
