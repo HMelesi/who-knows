@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const server = require("http").Server(app);
-const io = require("socket.io").listen(server);
+const io = require("socket.io")(server);
 
 const players = {};
 
@@ -75,5 +75,5 @@ io.on("connection", function (socket) {
   });
 });
 
-app.listen(process.env.PORT || 3000, 
+server.listen(process.env.PORT || 3000, 
 	() => console.log("Server is running..."));
