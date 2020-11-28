@@ -1,6 +1,5 @@
 const config = {
   type: Phaser.AUTO,
-  parent: "phaser-example",
   width: 640,
   height: 640,
   physics: {
@@ -21,10 +20,9 @@ const game = new Phaser.Game(config);
 
 function preload() {
   this.load.image("outdoor", "assets/Serene_Village_16x16.png");
-  this.load.tilemapTiledJSON("level1", "assets/maps/MAP-ONE.json");
+  this.load.tilemapTiledJSON("level1", "assets/maps/MAP-1.json");
   this.load.image("lizz", "assets/spaceShips_001.png");
   this.load.image("otherPlayer", "assets/enemyBlack5.png");
-  this.load.image("star", "assets/star_gold.png");
   this.load.spritesheet("lizz_run", "assets/characters/lizz_run.png", {
     frameWidth: 16,
     frameHeight: 32,
@@ -37,20 +35,35 @@ function preload() {
 
 function create() {
 
-  const onemap = this.make.tilemap({ key: "level1" });
-  const onetileset = onemap.addTilesetImage("outdoor", "outdoor");
-  const onelayer = onemap.createStaticLayer(
-    "Tile Layer 1",
-    onetileset,
+  this.onemap = this.make.tilemap({ key: "level1", tileWidth: 16, tileHeight: 16 });
+  this.onetileset = this.onemap.addTilesetImage("outdoor", "outdoor", 16, 16);
+  this.waterlayer = this.onemap.createStaticLayer(
+    "waterLayer",
+    this.onetileset,
     0,
     0
   );
+  this.groundlayer = this.onemap.createDynamicLayer(
+    "staticLayer",
+    this.onetileset,
+    0,
+    0
+  );
+  this.physics.add.collider(this.person, this.groundlayer, null, null, this);
+  // this.groundlayer.setCollisionByProperty({ collides: true });
+  this.groundlayer.setCollisionBetween(20,21);
+  this.groundlayer.setCollisionBetween(39,40);
+  this.groundlayer.setCollisionBetween(79,84);
+  this.groundlayer.setCollisionBetween(98,99);
+  this.groundlayer.setCollisionBetween(103,104);
+  this.groundlayer.setCollisionBetween(117,122);
 
   cursors = this.input.keyboard.createCursorKeys();
 
   const self = this;
   this.socket = io();
   this.otherPlayers = this.physics.add.group();
+  this.mePlayer = this.physics.add.group();
 
   this.socket.on("currentPlayers", function (players) {
     Object.keys(players).forEach(function (id) {
@@ -84,19 +97,19 @@ function create() {
     });
   });
 
-  this.socket.on("starLocation", function (starLocation) {
-    if (self.star) self.star.destroy();
-    self.star = self.physics.add.image(starLocation.x, starLocation.y, "star");
-    self.physics.add.overlap(
-      self.person,
-      self.star,
-      function () {
-        this.socket.emit("starCollected");
-      },
-      null,
-      self
-    );
-  });
+  // this.socket.on("starLocation", function (starLocation) {
+  //   if (self.star) self.star.destroy();
+  //   self.star = self.physics.add.image(starLocation.x, starLocation.y, "star");
+  //   self.physics.add.overlap(
+  //     self.person,
+  //     self.star,
+  //     function () {
+  //       this.socket.emit("starCollected");
+  //     },
+  //     null,
+  //     self
+  //   );
+  // });
 
   this.anims.create({
     key: "left",
@@ -135,7 +148,7 @@ function create() {
 
   this.cursors = this.input.keyboard.createCursorKeys();
 
-  // this.physics.add.collider(this.person, onelayer);
+
 }
 
 function update() {
@@ -184,6 +197,7 @@ function update() {
       y: this.person.y,
     };
 
+    this.physics.collide(this.person, this.groundlayer);
     // this.physics.world.wrap(this.person, 5);
   }
 }
@@ -191,8 +205,9 @@ function update() {
 function addPlayer(self, playerInfo) {
   self.person = self.physics.add
     .sprite(playerInfo.x, playerInfo.y, "lizz_run")
-    .setOrigin(0.5, 0.5)
-    .setDisplaySize(16, 32);
+    .setOrigin(0, 0)
+    .setDisplaySize(16, 32)
+    .setCollideWorldBounds(true);
 }
 
 function addOtherPlayers(self, playerInfo) {

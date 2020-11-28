@@ -5,15 +5,10 @@ const io = require("socket.io")(server);
 
 const players = {};
 
-const star = {
-  x: Math.floor(Math.random() * 700) + 50,
-  y: Math.floor(Math.random() * 500) + 50,
-};
-
-const scores = {
-  blue: 0,
-  red: 0,
-};
+// const star = {
+//   x: Math.floor(Math.random() * 700) + 50,
+//   y: Math.floor(Math.random() * 500) + 50,
+// };
 
 app.use(express.static(__dirname + "/public"));
 
@@ -28,10 +23,9 @@ io.on("connection", function (socket) {
   players[socket.id] = {
     rotation: 0,
     //deciding location of the players - change to be dependent on character
-    x: Math.floor(Math.random() * 700) + 50,
-    y: Math.floor(Math.random() * 500) + 50,
+    x: 90,
+    y: 550,
     playerId: socket.id,
-    team: Math.floor(Math.random() * 2) == 0 ? "red" : "blue",
   };
 
   // send the players object to the new player
@@ -41,9 +35,9 @@ io.on("connection", function (socket) {
   socket.broadcast.emit("newPlayer", players[socket.id]);
 
   // send the star object to the new player
-  socket.emit("starLocation", star);
+  // socket.emit("starLocation", star);
   // send the current scores
-  socket.emit("scoreUpdate", scores);
+  // socket.emit("scoreUpdate", scores);
 
   socket.on("disconnect", function () {
     console.log("user disconnected");
@@ -62,18 +56,18 @@ io.on("connection", function (socket) {
     socket.broadcast.emit("playerMoved", players[socket.id]);
   });
 
-  socket.on("starCollected", function () {
-    if (players[socket.id].team === "red") {
-      scores.red += 10;
-    } else {
-      scores.blue += 10;
-    }
-    star.x = Math.floor(Math.random() * 700) + 50;
-    star.y = Math.floor(Math.random() * 500) + 50;
-    io.emit("starLocation", star);
-    io.emit("scoreUpdate", scores);
-  });
+  // socket.on("starCollected", function () {
+  //   if (players[socket.id].team === "red") {
+  //     scores.red += 10;
+  //   } else {
+  //     scores.blue += 10;
+  //   }
+  //   star.x = Math.floor(Math.random() * 700) + 50;
+  //   star.y = Math.floor(Math.random() * 500) + 50;
+  //   io.emit("starLocation", star);
+  //   io.emit("scoreUpdate", scores);
+  // });
 });
 
-server.listen(process.env.PORT || 3002, 
+server.listen(process.env.PORT || 3003, 
 	() => console.log("Server is running..."));
