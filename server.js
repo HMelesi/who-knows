@@ -12,18 +12,29 @@ const players = {};
 
 app.use(express.static(__dirname + "/public"));
 
-app.get("/", function (req, res) {
+app.get("/*", function (req, res) {
   res.sendFile(__dirname + "/index.html");
 });
 
+
+
 io.on("connection", function (socket) {
   console.log("a user connected");
+  const name = socket.handshake.query.token;
+  let x;
 
-  // create a new player and add it to our players object
+  if (name === 'fran') {
+    x = 80;
+  } else if (name === 'lizz') {
+    x = 120;
+  } else if (name === 'rosie') {
+    x = 160;
+  }
+
   players[socket.id] = {
     rotation: 0,
-    //deciding location of the players - change to be dependent on character
-    x: 90,
+    name: name,
+    x: x,
     y: 550,
     playerId: socket.id,
   };
@@ -51,9 +62,13 @@ io.on("connection", function (socket) {
   socket.on("playerMovement", function (movementData) {
     players[socket.id].x = movementData.x;
     players[socket.id].y = movementData.y;
-    players[socket.id].rotation = movementData.rotation;
     // emit a message to all players about the player that moved
     socket.broadcast.emit("playerMoved", players[socket.id]);
+  });
+
+  socket.on("playerStopped", function () {
+    // emit a message to all players about the player that moved
+    socket.broadcast.emit("playerStopped", players[socket.id]);
   });
 
   // socket.on("starCollected", function () {
