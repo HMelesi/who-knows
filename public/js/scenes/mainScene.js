@@ -55,14 +55,57 @@ class mainScene extends Phaser.Scene {
         0,
         0
       );
+      this.pathLayer= this.onemap.createStaticLayer(
+        "pathLayer",
+        this.onetileset,
+        0,
+        0
+      );
+      this.houselayer = this.onemap.createDynamicLayer(
+        "houseLayer",
+        this.onetileset,
+        0,
+        0
+      );
+      this.treelayer = this.onemap.createDynamicLayer(
+        "treeLayer",
+        this.onetileset,
+        0,
+        0
+      );
+      this.fencelayer = this.onemap.createDynamicLayer(
+        "fenceLayer",
+        this.onetileset,
+        0,
+        0
+      );
+      this.flowerLayer= this.onemap.createStaticLayer(
+        "flowerLayer",
+        this.onetileset,
+        0,
+        0
+      );
+      this.signlayer = this.onemap.createDynamicLayer(
+        "signLayer",
+        this.onetileset,
+        0,
+        0
+      );
       this.physics.add.collider(this.person, this.groundlayer, null, null, this);
-      // this.groundlayer.setCollisionByProperty({ collides: true });
+      this.physics.add.collider(this.person, this.houselayer, null, null, this);
+      this.physics.add.collider(this.person, this.treelayer, null, null, this);
+      this.physics.add.collider(this.person, this.fencelayer, null, null, this);
+      this.physics.add.collider(this.person, this.signlayer, null, null, this);
       this.groundlayer.setCollisionBetween(20,21);
       this.groundlayer.setCollisionBetween(39,40);
       this.groundlayer.setCollisionBetween(79,84);
       this.groundlayer.setCollisionBetween(98,99);
       this.groundlayer.setCollisionBetween(103,104);
       this.groundlayer.setCollisionBetween(117,122);
+      this.fencelayer.setCollisionBetween(1,854);
+      this.signlayer.setCollisionBetween(1,854);
+      this.treelayer.setCollisionBetween(1,854);
+      this.houselayer.setCollisionBetween(1,854);
   
       this.cursors = this.input.keyboard.createCursorKeys();
   
@@ -287,6 +330,10 @@ class mainScene extends Phaser.Scene {
         };
   
         this.physics.collide(this.person, this.groundlayer);
+        this.physics.collide(this.person, this.houselayer);
+        this.physics.collide(this.person, this.fencelayer);
+        this.physics.collide(this.person, this.treelayer);
+        this.physics.collide(this.person, this.signlayer);
         // this.physics.world.wrap(this.person, 5);
       }
     }
