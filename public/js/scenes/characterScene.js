@@ -24,24 +24,31 @@ class characterScene extends Phaser.Scene {
     }
     
     create() {
-       fran = this.physics.add.sprite(180,200,"fran_run").setScale(3);
+      this.cameras.main.backgroundColor.setTo(118,197,100);
+
+      this.title = this.add.text(240, 50, 'Who are you?', { fill: '#ede', fontFamily: "Yeseva One", fontSize: '24px'});
+
+       fran = this.physics.add.sprite(150,200,"fran_run").setScale(3);
        lizz = this.physics.add.sprite(320,200,"lizz_run").setScale(3);
-       rosie = this.physics.add.sprite(460,200,"rosie_run").setScale(3);
+       rosie = this.physics.add.sprite(490,200,"rosie_run").setScale(3);
 
-       const franButton = this.add.text(160, 300, 'Franny', { fill: '#0f0' });
-       franButton.setInteractive();
+       this.franButton = this.add.text(100, 300, 'Franny', { fill: '#b35', fontFamily: "Yeseva One", fontSize: '30px'})
+       .setInteractive()
+       .on('pointerdown', () => this.handleSelect('fran'))
+       .on('pointerover', () => this.enterButtonHoverState('fran') )
+       .on('pointerout', () => this.enterButtonRestState('fran') );
 
-       franButton.on('pointerdown', () => this.handleSelect('fran'));
+       this.lizzButton = this.add.text(290, 300, 'Lizz', { fill: '#b35', fontFamily: "Yeseva One", fontSize: '30px'})
+       .setInteractive()
+       .on('pointerdown', () => this.handleSelect('lizz'))
+       .on('pointerover', () => this.enterButtonHoverState('lizz') )
+       .on('pointerout', () => this.enterButtonRestState('lizz') );
 
-       const lizzButton = this.add.text(300, 300, 'Lizz', { fill: '#0f0' });
-       lizzButton.setInteractive();
-
-       lizzButton.on('pointerdown', () => this.handleSelect('lizz'));
-
-       const rosieButton = this.add.text(440, 300, 'Rosie', { fill: '#0f0' });
-       rosieButton.setInteractive();
-
-       rosieButton.on('pointerdown', () => this.handleSelect('rosie'));
+       this.rosieButton = this.add.text(450, 300, 'Rosie', { fill: '#b35', fontFamily: "Yeseva One", fontSize: '30px'})
+       .setInteractive()
+       .on('pointerdown', () => this.handleSelect('rosie'))
+       .on('pointerover', () => this.enterButtonHoverState('rosie') )
+       .on('pointerout', () => this.enterButtonRestState('rosie') );
 
 
        this.anims.create({
@@ -65,10 +72,13 @@ class characterScene extends Phaser.Scene {
         repeat: -1,
       });
 
-      const startButton = this.add.text(320, 450, 'Start', { fill: '#0f0' });
-      startButton.setInteractive();
+      this.chosenOne = this.add.text(250, 450, '', { fill: '#ede', fontFamily: "Yeseva One", fontSize: '24px'});
 
-      startButton.on('pointerdown', () => this.handleContinue());
+      this.startButton = this.add.text(285, 500, 'START', { fill: '#fb3', fontFamily: "Yeseva One", fontSize: '30px'})
+      .setInteractive()
+      .on('pointerdown', () => this.handleContinue())
+      .on('pointerover', () => this.enterButtonHoverState('start') )
+      .on('pointerout', () => this.enterButtonRestState('start') );
     }
   
     update() {
@@ -77,8 +87,42 @@ class characterScene extends Phaser.Scene {
         rosie.anims.play("rosie_downn", true);
     }
 
+    enterButtonHoverState(name) {
+      if(name === 'fran') {
+        this.franButton.setStyle({ fill: '#fb3', fontFamily: "Yeseva One", fontSize: '30px'});
+      } else if(name === 'lizz') {
+        this.lizzButton.setStyle({ fill: '#fb3', fontFamily: "Yeseva One", fontSize: '30px'});
+      } else if (name === 'rosie') {
+        this.rosieButton.setStyle({ fill: '#fb3', fontFamily: "Yeseva One", fontSize: '30px'});
+      } else if (name === 'start') {
+        this.startButton.setStyle({ fill: '#ede', fontFamily: "Yeseva One", fontSize: '30px'});
+      }
+
+    }
+  
+    enterButtonRestState(name) {
+      if(name === 'fran') {
+        this.franButton.setStyle({ fill: '#b35', fontFamily: "Yeseva One", fontSize: '30px'});
+      } else if(name === 'lizz') {
+        this.lizzButton.setStyle({ fill: '#b35', fontFamily: "Yeseva One", fontSize: '30px'});
+      } else if (name === 'rosie') {
+        this.rosieButton.setStyle({ fill: '#b35', fontFamily: "Yeseva One", fontSize: '30px'});
+      } else if (name === 'start') {
+        this.startButton.setStyle({ fill: '#fb3', fontFamily: "Yeseva One", fontSize: '30px'});
+      }
+    }
+
     handleSelect(name) 
     {
+      let showName;
+      if(name === 'fran') {
+        showName = 'Franny'
+      } else if(name === 'lizz') {
+        showName = 'Lizz'
+      } else if (name === 'rosie') {
+        showName = 'Rosie'
+      }
+      this.chosenOne.setText(`You are ${showName}`)
       localStorage.setItem('name', name);
     }
 
