@@ -35,7 +35,7 @@ io.on("connection", function (socket) {
     y = 550;
   } else if (name === 'chip') {
     x = 560;
-    y = 100;
+    y = 500;
   }
 
   players[socket.id] = {

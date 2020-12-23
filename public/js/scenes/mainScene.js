@@ -402,7 +402,7 @@ class mainScene extends Phaser.Scene {
           .setOrigin(0)
           .setCollideWorldBounds(true);
 
-          self.person.body.setCircle(1, 5, 25)
+          self.person.body.setCircle(1, 7, 26)
         }
         
         addOtherPlayers(self, playerInfo) {
