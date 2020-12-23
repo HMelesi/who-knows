@@ -14,6 +14,14 @@ class mainScene extends Phaser.Scene {
       this.load.image("outdoor", "assets/Serene_Village_16x16.png");
       this.load.image("otherPlayer", "assets/star_gold.png");
       this.load.tilemapTiledJSON("level1", "assets/maps/MAP-1.json");
+      this.load.spritesheet("chip_run", "assets/characters/chip_run.png", {
+        frameWidth: 16,
+        frameHeight: 32,
+      });
+      this.load.spritesheet("chip_idle", "assets/characters/chip_idle.png", {
+        frameWidth: 16,
+        frameHeight: 32,
+      });
       this.load.spritesheet("fran_run", "assets/characters/fran_run.png", {
         frameWidth: 16,
         frameHeight: 32,
@@ -61,6 +69,12 @@ class mainScene extends Phaser.Scene {
         0,
         0
       );
+      this.otherlayer = this.onemap.createStaticLayer(
+        "otherLayer",
+        this.onetileset,
+        0,
+        0
+      );
       this.houselayer = this.onemap.createDynamicLayer(
         "houseLayer",
         this.onetileset,
@@ -73,14 +87,14 @@ class mainScene extends Phaser.Scene {
         0,
         0
       );
-      this.fencelayer = this.onemap.createDynamicLayer(
-        "fenceLayer",
+      this.flowerLayer= this.onemap.createStaticLayer(
+        "flowerLayer",
         this.onetileset,
         0,
         0
       );
-      this.flowerLayer= this.onemap.createStaticLayer(
-        "flowerLayer",
+      this.fencelayer = this.onemap.createDynamicLayer(
+        "fenceLayer",
         this.onetileset,
         0,
         0
@@ -91,6 +105,8 @@ class mainScene extends Phaser.Scene {
         0,
         0
       );
+
+
       this.physics.add.collider(this.person, this.groundlayer, null, null, this);
       this.physics.add.collider(this.person, this.houselayer, null, null, this);
       this.physics.add.collider(this.person, this.treelayer, null, null, this);
@@ -116,8 +132,12 @@ class mainScene extends Phaser.Scene {
         }
       });
       this.otherPlayers = this.physics.add.group();
-      this.mePlayer = this.physics.add.group();
-  
+      //does not work:
+      this.physics.add.overlap(this.person, this.otherPlayers, function() {
+        console.log('hey');
+        this.socket.emit('playerCollision');
+      }, null, this);
+
       this.socket.on("currentPlayers", function (players) {
         Object.keys(players).forEach(function (id) {
           if (players[id].playerId === self.socket.id) {
@@ -125,7 +145,6 @@ class mainScene extends Phaser.Scene {
           } else {
             self.addOtherPlayers(self, players[id]);
           }
-          console.dir(players);
         });
       });
   
@@ -143,6 +162,7 @@ class mainScene extends Phaser.Scene {
   
   
       this.socket.on("playerMoved", function (playerInfo) {
+
         self.otherPlayers.getChildren().forEach(function (otherPlayer) {
           if (playerInfo.playerId === otherPlayer.playerId) {
             if (otherPlayer.x < playerInfo.x) {
@@ -168,7 +188,46 @@ class mainScene extends Phaser.Scene {
           }
         });
       })
+
+      this.socket.on("playerGone", function () {
+        console.log('player is gone')
+      })
   
+      this.anims.create({
+        key: "chip_left",
+        frames: this.anims.generateFrameNumbers("chip_run", { start: 12, end: 17 }),
+        frameRate: 10,
+        repeat: -1,
+      });
+  
+      this.anims.create({
+        key: "chip_right",
+        frames: this.anims.generateFrameNumbers("chip_run", { start: 0, end: 5 }),
+        frameRate: 10,
+        repeat: -1,
+      });
+  
+      this.anims.create({
+        key: "chip_up",
+        frames: this.anims.generateFrameNumbers("chip_run", { start: 6, end: 11 }),
+        frameRate: 10,
+        repeat: -1,
+      });
+  
+      this.anims.create({
+        key: "chip_down",
+        frames: this.anims.generateFrameNumbers("chip_run", { start: 18, end: 23 }),
+        frameRate: 10,
+        repeat: -1,
+      });
+  
+      this.anims.create({
+        key: "chip_idle",
+        frames: this.anims.generateFrameNumbers("chip_idle", { start: 3, end: 3 }),
+        frameRate: 10,
+        repeat: -1,
+      });
+
       this.anims.create({
         key: "fran_left",
         frames: this.anims.generateFrameNumbers("fran_run", { start: 12, end: 17 }),
@@ -275,13 +334,13 @@ class mainScene extends Phaser.Scene {
       });
 
       
-  
       this.cursors = this.input.keyboard.createCursorKeys();
-  
-  
+
     }
-  
+    
+    
     update() {
+
       if (this.person) {
         if (this.cursors.left.isDown) {
           this.person.setVelocityX(-160);
@@ -304,55 +363,57 @@ class mainScene extends Phaser.Scene {
           this.person.setVelocityY(0);
           this.person.anims.play(`${this.selectedCharacter}_idle`, true);
         }
-  
-  
-        // emit player movement
+        
+        
         const x = this.person.x;
         const y = this.person.y;
-  
+        
         if (
           this.person.oldPosition &&
           (x !== this.person.oldPosition.x ||
             y !== this.person.oldPosition.y )
-        ) {
-          this.socket.emit("playerMovement", {
-            x: this.person.x,
-            y: this.person.y,
-          });
-        } else {
-          this.socket.emit("playerStopped");
+            ) {
+              this.socket.emit("playerMovement", {
+                x: this.person.x,
+                y: this.person.y,
+              });
+            } else {
+              this.socket.emit("playerStopped");
+            }
+            
+            // save old position data
+            this.person.oldPosition = {
+              x: this.person.x,
+              y: this.person.y,
+            };
+            
+            this.physics.collide(this.person, this.groundlayer);
+            this.physics.collide(this.person, this.houselayer);
+            this.physics.collide(this.person, this.fencelayer);
+            this.physics.collide(this.person, this.treelayer);
+            this.physics.collide(this.person, this.signlayer);
+            // this.physics.world.wrap(this.person, 5);
+          }
         }
-  
-        // save old position data
-        this.person.oldPosition = {
-          x: this.person.x,
-          y: this.person.y,
-        };
-  
-        this.physics.collide(this.person, this.groundlayer);
-        this.physics.collide(this.person, this.houselayer);
-        this.physics.collide(this.person, this.fencelayer);
-        this.physics.collide(this.person, this.treelayer);
-        this.physics.collide(this.person, this.signlayer);
-        // this.physics.world.wrap(this.person, 5);
-      }
-    }
-
-    addPlayer(self, playerInfo) {
-        self.person = self.physics.add
+        
+        addPlayer(self, playerInfo) {
+          self.person = self.physics.add
           .sprite(playerInfo.x, playerInfo.y, "lizz_run")
-          .setOrigin(0, 0)
-          .setDisplaySize(16, 32)
+          .setOrigin(0)
           .setCollideWorldBounds(true);
-    }
 
-    addOtherPlayers(self, playerInfo) {
-        const otherPlayer = self.add
+          self.person.body.setCircle(1, 5, 25)
+        }
+        
+        addOtherPlayers(self, playerInfo) {
+          const otherPlayer = self.add
           .sprite(playerInfo.x, playerInfo.y, `${playerInfo.name}_run`)
-          .setOrigin(0, 0)
+          .setOrigin(0)
           .setDisplaySize(16, 32);
-        otherPlayer.playerId = playerInfo.playerId;
-        otherPlayer.anims.play(`${playerInfo.name}_idle`, true);
-        self.otherPlayers.add(otherPlayer);
-    }
-}
+          otherPlayer.playerId = playerInfo.playerId;
+          otherPlayer.anims.play(`${playerInfo.name}_idle`, true);
+          self.otherPlayers.add(otherPlayer);
+
+        }
+      }
+

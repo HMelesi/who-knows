@@ -22,20 +22,27 @@ io.on("connection", function (socket) {
   console.log("a user connected");
   const name = socket.handshake.query.token;
   let x;
+  let y;
 
   if (name === 'fran') {
     x = 80;
+    y = 550;
   } else if (name === 'lizz') {
     x = 120;
+    y = 550;
   } else if (name === 'rosie') {
     x = 160;
+    y = 550;
+  } else if (name === 'chip') {
+    x = 560;
+    y = 100;
   }
 
   players[socket.id] = {
     rotation: 0,
     name: name,
     x: x,
-    y: 550,
+    y: y,
     playerId: socket.id,
   };
 
@@ -71,17 +78,16 @@ io.on("connection", function (socket) {
     socket.broadcast.emit("playerStopped", players[socket.id]);
   });
 
-  // socket.on("starCollected", function () {
-  //   if (players[socket.id].team === "red") {
-  //     scores.red += 10;
-  //   } else {
-  //     scores.blue += 10;
-  //   }
-  //   star.x = Math.floor(Math.random() * 700) + 50;
-  //   star.y = Math.floor(Math.random() * 500) + 50;
-  //   io.emit("starLocation", star);
-  //   io.emit("scoreUpdate", scores);
-  // });
+  socket.on("playerCollison", function () {
+    // if (players[socket.id].team === "red") {
+    //   scores.red += 10;
+    // } else {
+    //   scores.blue += 10;
+    // }
+    // star.x = Math.floor(Math.random() * 700) + 50;
+    // star.y = Math.floor(Math.random() * 500) + 50;
+    io.emit("playerGone");
+  });
 });
 
 server.listen(process.env.PORT || 3003, 

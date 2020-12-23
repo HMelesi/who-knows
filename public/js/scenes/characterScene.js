@@ -32,6 +32,10 @@ class characterScene extends Phaser.Scene {
        lizz = this.physics.add.sprite(320,200,"lizz_run").setScale(3);
        rosie = this.physics.add.sprite(490,200,"rosie_run").setScale(3);
 
+       this.chipButton = this.add.text(5, 5, 'x', { fill: '#b35', fontFamily: "Yeseva One", fontSize: '30px'})
+       .setInteractive()
+       .on('pointerdown', () => this.handleSelect('chip'));
+
        this.franButton = this.add.text(100, 300, 'Franny', { fill: '#b35', fontFamily: "Yeseva One", fontSize: '30px'})
        .setInteractive()
        .on('pointerdown', () => this.handleSelect('fran'))
@@ -121,6 +125,8 @@ class characterScene extends Phaser.Scene {
         showName = 'Lizz'
       } else if (name === 'rosie') {
         showName = 'Rosie'
+      } else if (name === 'chip') {
+        showName = 'Chipie'
       }
       this.chosenOne.setText(`You are ${showName}`)
       localStorage.setItem('name', name);
