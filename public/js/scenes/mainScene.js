@@ -133,10 +133,7 @@ class mainScene extends Phaser.Scene {
       });
       this.otherPlayers = this.physics.add.group();
       //does not work:
-      this.physics.add.overlap(this.person, this.otherPlayers, function() {
-        console.log('hey');
-        this.socket.emit('playerCollision');
-      }, null, this);
+
 
       this.socket.on("currentPlayers", function (players) {
         Object.keys(players).forEach(function (id) {
@@ -189,8 +186,14 @@ class mainScene extends Phaser.Scene {
         });
       })
 
-      this.socket.on("playerGone", function () {
-        console.log('player is gone')
+      this.socket.on("playerGone", function (id) {
+        self.otherPlayers.getChildren().forEach(function (otherPlayer) {
+          if (id === otherPlayer.playerId) {
+            otherPlayer.destroy();
+          } else if (id === self.person.playerId) {
+            self.person.destroy();
+          }
+        });
       })
   
       this.anims.create({
@@ -341,7 +344,8 @@ class mainScene extends Phaser.Scene {
     
     update() {
 
-      if (this.person) {
+
+      if (this.person && this.person.active) {
         if (this.cursors.left.isDown) {
           this.person.setVelocityX(-160);
           this.person.setVelocityY(0);
@@ -365,6 +369,13 @@ class mainScene extends Phaser.Scene {
         }
         
         
+        this.physics.add.overlap(this.person, this.otherPlayers, function(person, otherPlayer) {
+          if(this.selectedCharacter === 'chip') {
+            const id = otherPlayer.playerId;
+            this.socket.emit("playerCollision", { id });
+          }
+        }, null, this);
+
         const x = this.person.x;
         const y = this.person.y;
         
@@ -402,6 +413,7 @@ class mainScene extends Phaser.Scene {
           .setOrigin(0)
           .setCollideWorldBounds(true);
 
+          self.person.playerId = playerInfo.playerId;
           self.person.body.setCircle(1, 7, 26)
         }
         

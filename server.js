@@ -1,3 +1,4 @@
+const { dir } = require("console");
 const express = require("express");
 const app = express();
 const server = require("http").Server(app);
@@ -78,15 +79,11 @@ io.on("connection", function (socket) {
     socket.broadcast.emit("playerStopped", players[socket.id]);
   });
 
-  socket.on("playerCollison", function () {
-    // if (players[socket.id].team === "red") {
-    //   scores.red += 10;
-    // } else {
-    //   scores.blue += 10;
-    // }
-    // star.x = Math.floor(Math.random() * 700) + 50;
-    // star.y = Math.floor(Math.random() * 500) + 50;
-    io.emit("playerGone");
+  socket.on("playerCollision", function (playerData) {
+    const { id } = playerData;
+    delete players[id];
+
+    io.emit("playerGone", id);
   });
 });
 
