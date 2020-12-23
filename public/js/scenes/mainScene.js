@@ -192,6 +192,7 @@ class mainScene extends Phaser.Scene {
             otherPlayer.destroy();
           } else if (id === self.person.playerId) {
             self.person.destroy();
+            self.handleContinue();
           }
         });
       })
@@ -426,6 +427,11 @@ class mainScene extends Phaser.Scene {
           otherPlayer.anims.play(`${playerInfo.name}_idle`, true);
           self.otherPlayers.add(otherPlayer);
 
+        }
+
+        handleContinue()
+        {
+          this.scene.start('failScene');
         }
       }
 
